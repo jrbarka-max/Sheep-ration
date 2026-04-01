@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 
 // ─── STORAGE ──────────────────────────────────────────────────────────────────
 const STORAGE_KEY = "sheep_lab_tests_v1";
+const RATIONS_KEY = "sheep_saved_rations_v1";
 async function loadTests() {
   try { const v = localStorage.getItem(STORAGE_KEY); return v ? JSON.parse(v) : null; }
   catch(e) { return null; }
@@ -9,6 +10,14 @@ async function loadTests() {
 async function saveTests(tests) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tests)); }
   catch(e) { console.error("Storage error:", e); }
+}
+async function loadRations() {
+  try { const v = localStorage.getItem(RATIONS_KEY); return v ? JSON.parse(v) : []; }
+  catch(e) { return []; }
+}
+async function persistRations(r) {
+  try { localStorage.setItem(RATIONS_KEY, JSON.stringify(r)); }
+  catch(e) { console.error("Rations storage error:", e); }
 }
 
 // ─── NRC 2007 ANIMAL CLASSES ──────────────────────────────────────────────────
@@ -254,12 +263,17 @@ export default function SheepRationTool() {
   const [parsing,    setParsing]    = useState(false);
   const [parseErr,   setParseErr]   = useState(null);
   const [selGroup,   setSelGroup]   = useState("Ewe – Maintenance");
+  const [savedRations, setSavedRationsRaw] = useState([]);
+  const [rationName,   setRationName]   = useState("");
+  const [showSaveBox,  setShowSaveBox]  = useState(false);
+  const [confirmDelR,  setConfirmDelR]  = useState(null);
 
   useEffect(()=>{
     loadTests().then(saved=>{
       if(saved&&Array.isArray(saved)&&saved.length>0) setLabRaw(saved);
       setStorageOk(true);
     });
+    loadRations().then(r=>{ if(r&&r.length) setSavedRationsRaw(r); });
   },[]);
 
   const setLabTests = upd => {
@@ -268,6 +282,37 @@ export default function SheepRationTool() {
       saveTests(next);
       return next;
     });
+  };
+
+  const setSavedRations = upd => {
+    setSavedRationsRaw(prev=>{
+      const next = typeof upd==="function"?upd(prev):upd;
+      persistRations(next);
+      return next;
+    });
+  };
+
+  const saveCurrentRation = () => {
+    if(!rationName.trim()) return;
+    const entry = {
+      id: "ration_"+Date.now(),
+      name: rationName.trim(),
+      date: new Date().toISOString().split("T")[0],
+      animalId, numHead, rations, amounts, feedCosts, selGroup,
+    };
+    setSavedRations(prev=>[entry,...prev]);
+    setRationName("");
+    setShowSaveBox(false);
+  };
+
+  const loadRation = r => {
+    setAnimalId(r.animalId);
+    setNumHead(r.numHead);
+    setRations(r.rations);
+    setAmounts(r.amounts);
+    setFeedCosts(r.feedCosts||{});
+    setSelGroup(r.selGroup||"Ewe – Maintenance");
+    setTab("builder");
   };
 
   const animal = ANIMAL_CLASSES.find(a=>a.id===animalId) || ANIMAL_CLASSES[0];
@@ -460,7 +505,7 @@ export default function SheepRationTool() {
           </div>
         </div>
         <div style={{display:"flex",background:C.bg,border:`1px solid ${C.border}`,borderRadius:5,overflow:"hidden"}}>
-          {["builder","summary","herd","library","my tests"].map(t=>(
+          {["builder","summary","herd","rations","library","my tests"].map(t=>(
             <button key={t} onClick={()=>{setTab(t);if(t==="my tests")setTestTab("list");}} style={{
               padding:"7px 14px",background:tab===t?C.accentBg:"transparent",
               color:tab===t?C.accent:C.textMute,border:"none",
@@ -642,6 +687,21 @@ export default function SheepRationTool() {
                   ))}
                 </div>
               )}
+
+              {/* SAVE RATION */}
+              <div style={{marginTop:14}}>
+                {!showSaveBox?(
+                  <button className="btn-ghost" onClick={()=>setShowSaveBox(true)} style={{width:"100%",padding:"8px",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                    💾 Save This Ration
+                  </button>
+                ):(
+                  <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"12px 14px",display:"flex",gap:8,alignItems:"center"}}>
+                    <input type="text" value={rationName} onChange={e=>setRationName(e.target.value)} placeholder="Name this ration..." style={{flex:1}} onKeyDown={e=>e.key==="Enter"&&saveCurrentRation()}/>
+                    <button className="btn-primary" onClick={saveCurrentRation} style={{whiteSpace:"nowrap"}}>Save</button>
+                    <button className="btn-ghost" onClick={()=>{setShowSaveBox(false);setRationName("");}}>✕</button>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
@@ -716,6 +776,58 @@ export default function SheepRationTool() {
                     </tbody>
                   </table>
                 </>
+              )}
+            </>
+          )}
+
+          {/* ════ SAVED RATIONS ════ */}
+          {tab==="rations"&&(
+            <>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <div style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.accentDim,letterSpacing:2,textTransform:"uppercase"}}>Saved Rations — {savedRations.length}</div>
+              </div>
+              {savedRations.length===0?(
+                <div style={{border:`1px dashed ${C.border}`,borderRadius:6,padding:"32px 0",textAlign:"center",color:C.textMute,fontFamily:"DM Mono,monospace",fontSize:12}}>
+                  No saved rations yet — build a ration and click "Save This Ration"
+                </div>
+              ):(
+                savedRations.map(r=>(
+                  <div key={r.id} style={{background:C.card,border:`1px solid ${C.border2}`,borderRadius:6,padding:"12px 14px",marginBottom:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                      <div>
+                        <div style={{fontFamily:"DM Mono,monospace",fontSize:14,color:C.text,fontWeight:500,marginBottom:3}}>{r.name}</div>
+                        <div style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.accentDim}}>
+                          {ANIMAL_CLASSES.find(a=>a.id===r.animalId)?.group||""} · {ANIMAL_CLASSES.find(a=>a.id===r.animalId)?.bw||""} lb · {r.numHead} head
+                        </div>
+                        <div style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textMute,marginTop:2}}>{r.date} · {r.rations.length} ingredient{r.rations.length!==1?"s":""}</div>
+                      </div>
+                      <div style={{display:"flex",gap:5,flexShrink:0}}>
+                        <button className="btn-primary" onClick={()=>loadRation(r)}>Load</button>
+                        <button className="btn-danger" onClick={()=>setConfirmDelR(r.id)}>Delete</button>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      {r.rations.map(fid=>{
+                        const feed=[...BOOK_FEEDS,...activeLab.map(t=>({id:t.id,name:t.name}))].find(f=>f.id===fid);
+                        const af=parseFloat(r.amounts[fid]||0);
+                        return feed?(
+                          <div key={fid} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:3,padding:"3px 8px",fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim}}>
+                            {feed.name} <span style={{color:C.accent}}>{af.toFixed(1)} lb</span>
+                          </div>
+                        ):null;
+                      })}
+                    </div>
+                    {confirmDelR===r.id&&(
+                      <div style={{marginTop:10,padding:"10px 12px",background:C.redBg,border:`1px solid #3a1818`,borderRadius:4,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontFamily:"DM Mono,monospace",fontSize:10,color:C.red}}>Delete "{r.name}"?</span>
+                        <div style={{display:"flex",gap:6}}>
+                          <button onClick={()=>{setSavedRations(p=>p.filter(x=>x.id!==r.id));setConfirmDelR(null);}} style={{background:"#3a1818",color:"#ff8888",border:"1px solid #5a2a2a",borderRadius:3,padding:"4px 12px",fontSize:9}}>Yes, Delete</button>
+                          <button className="btn-ghost" onClick={()=>setConfirmDelR(null)}>Cancel</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
             </>
           )}
