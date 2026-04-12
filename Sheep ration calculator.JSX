@@ -196,11 +196,11 @@ const BLANK_GROUP = { name:"",head_count:0,animal_id:"ew_m_110",sel_group:"Ewe �
 
 const pOf=(h,n)=>n>0?(h/n)*100:null;
 const C = {
-  bg:"#0f0d0a", panel:"#141210", card:"#1a1714", border:"#2a2520", border2:"#332e28",
-  accent:"#c8922a", accentDim:"#7a5818", accentBg:"#1e1710",
-  green:"#5a9a5a", greenBg:"#0e180e", greenBdr:"#1e3a1e",
-  red:"#c05040", redBg:"#1a0e0e", orange:"#d4822a",
-  text:"#e8e0d0", textDim:"#8a8070", textMute:"#504840", labGreen:"#6ab06a",
+  bg:"#f5f2ec", panel:"#ffffff", card:"#faf8f4", border:"#ddd8ce", border2:"#c8c0b0",
+  accent:"#a06b18", accentDim:"#c8922a", accentBg:"#fef6e8",
+  green:"#3a7a3a", greenBg:"#eef6ee", greenBdr:"#a8d0a8",
+  red:"#b03020", redBg:"#fdf0ee", orange:"#b86010",
+  text:"#2a2218", textDim:"#6a5a40", textMute:"#a09080", labGreen:"#2a7a2a",
 };
 const sc=p=>p===null?C.textMute:p<85?C.red:p<=115?C.green:C.orange;
 const sl=p=>p===null?"—":p<85?"LOW":p<=115?"OK":"HIGH";
@@ -293,6 +293,18 @@ export default function SheepRationTool() {
     ...activeLab.map(t=>({id:t.id,name:t.name,cat:t.cat,source:"lab",dm:t.dm,tdn:t.tdn,cp:t.cp,ca:t.ca,p:t.p})),
     ...BOOK_FEEDS
   ],[activeLab]);
+  // Which saved rations are actively assigned to groups
+  const rationUsage = useMemo(()=>{
+    const map = {};
+    groups.forEach(g=>{
+      if(g.currentRationId){
+        if(!map[g.currentRationId]) map[g.currentRationId]=[];
+        map[g.currentRationId].push(g.name);
+      }
+    });
+    return map;
+  },[groups]);
+
   const rationFeeds = rations.map(id=>allFeeds.find(f=>f.id===id)).filter(Boolean);
 
   const totals = useMemo(()=>{
@@ -771,8 +783,12 @@ export default function SheepRationTool() {
                   <div key={r.id} style={{background:C.card,border:`1px solid ${C.border2}`,borderRadius:6,padding:"12px 14px",marginBottom:8}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                       <div>
-                        <div style={{fontFamily:"DM Mono,monospace",fontSize:14,color:C.text,fontWeight:500,marginBottom:3}}>{r.name}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                          <span style={{fontFamily:"DM Mono,monospace",fontSize:14,color:C.text,fontWeight:500}}>{r.name}</span>
+                          {rationUsage[r.id]&&<span className="tag" style={{background:C.greenBg,color:C.green,border:`1px solid ${C.greenBdr}`}}>IN USE</span>}
+                        </div>
                         <div style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.accentDim}}>{ANIMAL_CLASSES.find(a=>a.id===(r.animalId||r.animal_id))?.group||""} · {ANIMAL_CLASSES.find(a=>a.id===(r.animalId||r.animal_id))?.bw||""} lb · {r.numHead||r.num_head||1} head</div>
+                        {rationUsage[r.id]&&<div style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.green,marginTop:2}}>Fed to: {rationUsage[r.id].join(", ")}</div>}
                         <div style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.textMute,marginTop:2}}>Created {fmtDate(r.date||r.created_at?.split("T")[0])} · {(r.rations||[]).length} ingredient{(r.rations||[]).length!==1?"s":""}</div>
                       </div>
                       <div style={{display:"flex",gap:5,flexShrink:0}}>
