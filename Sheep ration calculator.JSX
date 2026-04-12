@@ -676,7 +676,18 @@ export default function SheepRationTool() {
           {/* ════ BUILDER ════ */}
           {tab==="builder"&&(
             <>
-              <div style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.accentDim,letterSpacing:2,marginBottom:10,textTransform:"uppercase"}}>Ration Builder — As-Fed lb / Head / Day</div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.accentDim,letterSpacing:2,textTransform:"uppercase"}}>Ration Builder — As-Fed lb / Head / Day</div>
+                {!showSaveBox?(
+                  <button className="btn-primary" onClick={()=>setShowSaveBox(true)} style={{fontSize:9,letterSpacing:1,padding:"5px 12px",whiteSpace:"nowrap"}}>💾 Save Ration</button>
+                ):(
+                  <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                    <input type="text" value={rationName} onChange={e=>setRationName(e.target.value)} placeholder="Ration name..." style={{width:160}} onKeyDown={e=>e.key==="Enter"&&saveCurrentRation()}/>
+                    <button className="btn-primary" onClick={saveCurrentRation} style={{whiteSpace:"nowrap",padding:"5px 10px"}}>Save</button>
+                    <button className="btn-ghost" onClick={()=>{setShowSaveBox(false);setRationName("");}} style={{padding:"5px 8px"}}>✕</button>
+                  </div>
+                )}
+              </div>
               {rationFeeds.length===0?(
                 <div style={{border:`1px dashed ${C.border}`,borderRadius:6,padding:"28px 0",textAlign:"center",color:C.textMute,fontFamily:"DM Mono,monospace",fontSize:12,marginBottom:14}}>← Add ingredients from the left panel</div>
               ):(
@@ -745,18 +756,7 @@ export default function SheepRationTool() {
                   {recs.map((r,i)=>(<div key={i} style={{fontFamily:"DM Mono,monospace",fontSize:11,color:r.t==="ok"?C.green:r.t==="low"?C.red:r.t==="hi"?C.orange:C.orange,marginBottom:4}}>{r.t==="ok"?"✓":r.t==="low"?"▲":r.t==="hi"?"▼":"⚠"} {r.m}</div>))}
                 </div>
               )}
-              {/* Save ration */}
-              <div style={{marginTop:10}}>
-                {!showSaveBox?(
-                  <button className="btn-ghost" onClick={()=>setShowSaveBox(true)} style={{width:"100%",padding:"8px",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>💾 Save This Ration</button>
-                ):(
-                  <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:5,padding:"10px 12px",display:"flex",gap:8,alignItems:"center"}}>
-                    <input type="text" value={rationName} onChange={e=>setRationName(e.target.value)} placeholder="Name this ration..." style={{flex:1}} onKeyDown={e=>e.key==="Enter"&&saveCurrentRation()}/>
-                    <button className="btn-primary" onClick={saveCurrentRation}>Save</button>
-                    <button className="btn-ghost" onClick={()=>{setShowSaveBox(false);setRationName("");}}>✕</button>
-                  </div>
-                )}
-              </div>
+
             </>
           )}
 
