@@ -410,6 +410,10 @@ export default function SheepRationTool() {
     finally{setParsing(false);}
   };
 
+  // Stable handlers to avoid input focus loss on re-render
+  const handleFormChange = useCallback((k, v) => setFormData(p => ({...p, [k]: v})), []);
+  const handleGroupChange = useCallback((k, v) => setGroupForm(p => ({...p, [k]: v})), []);
+
   const recs=useMemo(()=>{
     if(!rationFeeds.length)return[];
     const r=[];
@@ -646,11 +650,11 @@ export default function SheepRationTool() {
                   <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"18px 20px"}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Group Name *</label>
-                      <input type="text" value={groupForm["name"]??""} onChange={e=>setGroupForm(p=>({...p,["name"]:e.target.value}))} style={{width:150}}/>
+                      <input type="text" value={groupForm["name"]??""} onChange={e=>handleGroupChange("name", e.target.value)} style={{width:150}}/>
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Head Count</label>
-                      <input type="number" value={groupForm["head_count"]??""} onChange={e=>setGroupForm(p=>({...p,["head_count"]:parseInt(e.target.value)||0}))} style={{width:150}}/>
+                      <input type="number" value={groupForm["head_count"]??""} onChange={e=>handleGroupChange("head_count", parseInt(e.target.value)||0)} style={{width:150}}/>
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Animal Category</label>
@@ -660,13 +664,13 @@ export default function SheepRationTool() {
                     </div>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Body Weight / ADG</label>
-                      <select value={groupForm.animal_id||groupForm.animalId||"ew_m_110"} onChange={e=>setGroupForm(p=>({...p,animal_id:e.target.value,animalId:e.target.value}))} style={{width:150}}>
+                      <select value={groupForm.animal_id||groupForm.animalId||"ew_m_110"} onChange={e=>{setGroupForm(p=>({...p,animal_id:e.target.value,animalId:e.target.value}));}} style={{width:150}}>
                         {groupedForForm.map(a=>(<option key={a.id} value={a.id}>{a.bw} lb{a.adg!==undefined?` · ${a.adg} lb/d gain`:""}</option>))}
                       </select>
                     </div>
                     <div style={{marginBottom:9}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,display:"block",marginBottom:5}}>Notes</label>
-                      <textarea value={groupForm.notes||""} onChange={e=>setGroupForm(p=>({...p,notes:e.target.value}))} style={{width:"100%",height:50,resize:"vertical"}} placeholder="Location, breed, notes..."/>
+                      <textarea value={groupForm.notes||""} onChange={e=>handleGroupChange("notes", e.target.value)} style={{width:"100%",height:50,resize:"vertical"}} placeholder="Location, breed, notes..."/>
                     </div>
                     <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
                       <button className="btn-ghost" onClick={()=>setGroupTab("list")}>Cancel</button>
@@ -916,58 +920,58 @@ export default function SheepRationTool() {
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Name *</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="text" step="0.01" value={formData["name"]??""} onChange={e=>setFormData(p=>({...p,["name"]: e.target.value}))} style={{width:130}}/>
+                        <input type="text" step="0.01" value={formData["name"]??""} onChange={e=>handleFormChange("name", e.target.value)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                         <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Category</label>
-                        <select value={formData.cat} onChange={e=>setFormData(p=>({...p,cat:e.target.value}))} style={{width:130}}>{FEED_CATS.map(c=><option key={c}>{c}</option>)}</select>
+                        <select value={formData.cat} onChange={e=>handleFormChange("cat", e.target.value)} style={{width:130}}>{FEED_CATS.map(c=><option key={c}>{c}</option>)}</select>
                       </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Description</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="text" step="0.01" value={formData["description"]??""} onChange={e=>setFormData(p=>({...p,["description"]: e.target.value}))} style={{width:130}}/>
+                        <input type="text" step="0.01" value={formData["description"]??""} onChange={e=>handleFormChange("description", e.target.value)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Sample No.</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="text" step="0.01" value={formData["sample_no"]??""} onChange={e=>setFormData(p=>({...p,["sample_no"]: e.target.value}))} style={{width:130}}/>
+                        <input type="text" step="0.01" value={formData["sample_no"]??""} onChange={e=>handleFormChange("sample_no", e.target.value)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Lab Date (YYYY-MM-DD)</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="text" step="0.01" value={formData["lab_date"]??""} onChange={e=>setFormData(p=>({...p,["lab_date"]: e.target.value}))} style={{width:130}}/>
+                        <input type="text" step="0.01" value={formData["lab_date"]??""} onChange={e=>handleFormChange("lab_date", e.target.value)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                         <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Source</label>
-                        <select value={formData.source} onChange={e=>setFormData(p=>({...p,source:e.target.value}))} style={{width:130}}><option value="manual">Manual Entry</option><option value="lab">Lab Test</option></select>
+                        <select value={formData.source} onChange={e=>handleFormChange("source", e.target.value)} style={{width:130}}><option value="manual">Manual Entry</option><option value="lab">Lab Test</option></select>
                       </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>$/cwt</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.textMute}}>as-fed</span>
-                        <input type="number" step="0.01" value={formData["cost_per_ton"]??""} onChange={e=>setFormData(p=>({...p,["cost_per_ton"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["cost_per_ton"]??""} onChange={e=>handleFormChange("cost_per_ton", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.accentDim,letterSpacing:2,marginBottom:8,marginTop:12,textTransform:"uppercase"}}>As-Fed Basis</div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Dry Matter %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["dm"]??""} onChange={e=>setFormData(p=>({...p,["dm"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["dm"]??""} onChange={e=>handleFormChange("dm", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Moisture %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["moisture"]??""} onChange={e=>setFormData(p=>({...p,["moisture"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["moisture"]??""} onChange={e=>handleFormChange("moisture", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>pH</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="text" step="0.01" value={formData["ph"]??""} onChange={e=>setFormData(p=>({...p,["ph"]: e.target.value}))} style={{width:130}}/>
+                        <input type="text" step="0.01" value={formData["ph"]??""} onChange={e=>handleFormChange("ph", e.target.value)} style={{width:130}}/>
                       </div>
                     </div>
                     </div>
@@ -976,84 +980,84 @@ export default function SheepRationTool() {
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>TDN % ★</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.textMute}}>used</span>
-                        <input type="number" step="0.01" value={formData["tdn"]??""} onChange={e=>setFormData(p=>({...p,["tdn"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["tdn"]??""} onChange={e=>handleFormChange("tdn", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>CP % ★</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.textMute}}>used</span>
-                        <input type="number" step="0.01" value={formData["cp"]??""} onChange={e=>setFormData(p=>({...p,["cp"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["cp"]??""} onChange={e=>handleFormChange("cp", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Ca % ★</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.textMute}}>used</span>
-                        <input type="number" step="0.01" value={formData["ca"]??""} onChange={e=>setFormData(p=>({...p,["ca"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["ca"]??""} onChange={e=>handleFormChange("ca", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>P % ★</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.textMute}}>used</span>
-                        <input type="number" step="0.01" value={formData["p"]??""} onChange={e=>setFormData(p=>({...p,["p"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["p"]??""} onChange={e=>handleFormChange("p", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>ADF %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["adf"]??""} onChange={e=>setFormData(p=>({...p,["adf"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["adf"]??""} onChange={e=>handleFormChange("adf", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>aNDF %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["andf"]??""} onChange={e=>setFormData(p=>({...p,["andf"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["andf"]??""} onChange={e=>handleFormChange("andf", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Ash %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["ash"]??""} onChange={e=>setFormData(p=>({...p,["ash"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["ash"]??""} onChange={e=>handleFormChange("ash", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Fat (EE) %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["fat"]??""} onChange={e=>setFormData(p=>({...p,["fat"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["fat"]??""} onChange={e=>handleFormChange("fat", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>K %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["k"]??""} onChange={e=>setFormData(p=>({...p,["k"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["k"]??""} onChange={e=>handleFormChange("k", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>Mg %</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["mg"]??""} onChange={e=>setFormData(p=>({...p,["mg"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["mg"]??""} onChange={e=>handleFormChange("mg", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.accentDim,letterSpacing:2,marginBottom:8,marginTop:12,textTransform:"uppercase"}}>Energy (Mcal/cwt DM)</div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>NEM</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["nem"]??""} onChange={e=>setFormData(p=>({...p,["nem"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["nem"]??""} onChange={e=>handleFormChange("nem", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>NEG</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["neg"]??""} onChange={e=>setFormData(p=>({...p,["neg"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["neg"]??""} onChange={e=>handleFormChange("neg", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                       <label style={{fontFamily:"DM Mono,monospace",fontSize:9,color:C.textDim,letterSpacing:1,minWidth:140}}>RFV</label>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" step="0.01" value={formData["rfv"]??""} onChange={e=>setFormData(p=>({...p,["rfv"]:parseFloat(e.target.value)||0}))} style={{width:130}}/>
+                        <input type="number" step="0.01" value={formData["rfv"]??""} onChange={e=>handleFormChange("rfv", parseFloat(e.target.value)||0)} style={{width:130}}/>
                       </div>
                     </div>
                       <div style={{fontFamily:"DM Mono,monospace",fontSize:8,color:C.accentDim,letterSpacing:2,marginBottom:5,marginTop:12,textTransform:"uppercase"}}>Notes</div>
-                      <textarea value={formData.notes||""} onChange={e=>setFormData(p=>({...p,notes:e.target.value}))} style={{width:"100%",height:55,resize:"vertical"}} placeholder="Lab, date, crop info..."/>
+                      <textarea value={formData.notes||""} onChange={e=>handleFormChange("notes", e.target.value)} style={{width:"100%",height:55,resize:"vertical"}} placeholder="Lab, date, crop info..."/>
                     </div>
                   </div>
                   <div style={{marginTop:14,display:"flex",gap:8,justifyContent:"flex-end"}}>
